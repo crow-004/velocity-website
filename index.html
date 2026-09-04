@@ -80,8 +80,8 @@
         <div class="card">
             <h3>Key Capabilities</h3>
             <ul>
-                <li><strong>Sub-Millisecond Latency:</strong> Reduces session key rotation overhead from ~12ms to &lt;1ms.</li>
-                <li><strong>Hardware Integrity Bound:</strong> Keys are cryptographically tied to TEE measurement (MRENCLAVE).</li>
+                <li><strong>Microsecond Latency:</strong> Reduces session key rotation from a typical 10-50ms networked HSM round-trip to ~3µs — measured on real AWS Nitro Enclave hardware, not simulated.</li>
+                <li><strong>Hardware Integrity Bound:</strong> Keys are cryptographically tied to TEE hardware integrity measurements — validated on AWS Nitro Enclave (PCR0); architecturally compatible with Intel SGX (MRENCLAVE).</li>
                 <li><strong>Autonomous Ratcheting:</strong> Zero interactive handshakes during runtime execution.</li>
             </ul>
         </div>
