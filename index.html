@@ -3,93 +3,414 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Velocity — Hardware-Isolated Key Management</title>
+    <title>Velocity — Hardware-Backed Key Security. Zero Trust Custody.</title>
+    <meta name="description" content="Signing keys that rotate themselves, in microseconds — validated on real AWS Nitro Enclave and real AWS CloudHSM hardware. US Patent Pending.">
     <style>
+        :root {
+            --bg: #0d1117;
+            --surface: #161b22;
+            --surface-2: #1c2129;
+            --border: #30363d;
+            --text: #c9d1d9;
+            --text-bright: #ffffff;
+            --text-muted: #8b949e;
+            --text-dim: #6e7681;
+            --accent: #58a6ff;
+            --accent-bg: rgba(56, 139, 253, 0.15);
+            --accent-border: rgba(56, 139, 253, 0.4);
+            --green: #3fb950;
+            --green-bg: rgba(63, 185, 80, 0.12);
+        }
+        * { box-sizing: border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #0d1117;
-            color: #c9d1d9;
+            background-color: var(--bg);
+            color: var(--text);
             margin: 0;
             padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
+            line-height: 1.55;
         }
-        .container {
-            max-width: 750px;
-            padding: 40px 20px;
-            text-align: left;
-        }
+        .wrap { max-width: 860px; margin: 0 auto; padding: 0 20px; }
+        header.hero { padding: 64px 0 48px; }
         .badge {
             display: inline-block;
-            background: rgba(56, 139, 253, 0.15);
-            color: #58a6ff;
+            background: var(--accent-bg);
+            color: var(--accent);
             padding: 6px 12px;
             border-radius: 20px;
             font-size: 0.85rem;
             font-weight: 600;
             margin-bottom: 20px;
-            border: 1px solid rgba(56, 139, 253, 0.4);
+            border: 1px solid var(--accent-border);
+        }
+        .kicker {
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--text-dim);
+            margin-bottom: 10px;
         }
         h1 {
-            font-size: 2.8rem;
-            color: #ffffff;
-            margin: 0 0 10px 0;
+            font-size: 2.6rem;
+            color: var(--text-bright);
+            margin: 0 0 12px 0;
             letter-spacing: -0.02em;
+            line-height: 1.1;
         }
+        h1 span.accent { color: var(--accent); }
         p.subtitle {
-            font-size: 1.25rem;
-            color: #8b949e;
+            font-size: 1.2rem;
+            color: var(--text-muted);
             line-height: 1.5;
-            margin-bottom: 40px;
+            margin: 0 0 8px 0;
+            max-width: 640px;
         }
+        .byline { color: var(--text-dim); font-size: 0.95rem; margin-top: 20px; }
+        .byline a { color: var(--text-muted); }
+        section { padding: 40px 0; border-top: 1px solid var(--border); }
+        section h2 {
+            font-size: 1.6rem;
+            color: var(--text-bright);
+            margin: 0 0 6px 0;
+            letter-spacing: -0.01em;
+        }
+        section .lede { color: var(--text-muted); margin: 0 0 28px 0; font-size: 1.02rem; }
         .card {
-            background: #161b22;
-            border: 1px solid #30363d;
-            border-radius: 8px;
-            padding: 24px;
-            margin-bottom: 24px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 22px 24px;
+            margin-bottom: 16px;
         }
         .card h3 {
-            color: #ffffff;
-            margin-top: 0;
+            color: var(--text-bright);
+            margin: 0 0 8px 0;
+            font-size: 1.05rem;
         }
-        .footer {
-            margin-top: 40px;
-            font-size: 0.9rem;
-            color: #484f58;
-            border-top: 1px solid #21262d;
-            padding-top: 20px;
+        .card p, .card ul { margin: 0; color: var(--text); font-size: 0.96rem; }
+        .card p + p { margin-top: 10px; }
+        .card ul { padding-left: 20px; }
+        .card li { margin-bottom: 8px; }
+        .card li:last-child { margin-bottom: 0; }
+        .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+        .grid2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+        @media (max-width: 640px) {
+            .grid3, .grid2 { grid-template-columns: 1fr; }
+            h1 { font-size: 2rem; }
         }
-        a { color: #58a6ff; text-decoration: none; }
+        .step {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 20px;
+        }
+        .step .num {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 26px; height: 26px;
+            border-radius: 50%;
+            background: var(--accent-bg);
+            color: var(--accent);
+            font-weight: 700;
+            font-size: 0.85rem;
+            margin-bottom: 10px;
+        }
+        .step h3 { margin: 0 0 8px 0; font-size: 1rem; color: var(--text-bright); }
+        .step p { margin: 0; color: var(--text-muted); font-size: 0.92rem; }
+        .stat {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 18px 20px;
+        }
+        .stat .value { font-size: 1.9rem; font-weight: 700; color: var(--text-bright); line-height: 1; }
+        .stat .value small { font-size: 0.95rem; font-weight: 400; color: var(--text-muted); }
+        .stat .label { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); margin-bottom: 6px; }
+        .stat .caption { margin-top: 8px; font-size: 0.85rem; color: var(--text-muted); }
+        .note {
+            font-size: 0.88rem;
+            color: var(--text-muted);
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 14px 16px;
+            margin-top: 16px;
+        }
+        .note b { color: var(--text); }
+        .commercial {
+            background: var(--green-bg);
+            border: 1px solid rgba(63, 185, 80, 0.35);
+            border-radius: 10px;
+            padding: 24px;
+        }
+        .commercial h3 { color: var(--text-bright); margin: 0 0 10px 0; }
+        .commercial p { margin: 0 0 10px 0; }
+        .commercial p:last-child { margin-bottom: 0; }
+        .pill {
+            display: inline-block;
+            background: var(--green-bg);
+            color: var(--green);
+            border: 1px solid rgba(63, 185, 80, 0.4);
+            padding: 3px 10px;
+            border-radius: 14px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            margin-bottom: 10px;
+        }
+        .cta-row { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px; }
+        .btn {
+            display: inline-block;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            text-decoration: none;
+        }
+        .btn-primary { background: var(--accent); color: #0d1117; }
+        .btn-secondary { background: transparent; color: var(--text); border: 1px solid var(--border); }
+        a { color: var(--accent); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        code {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 1px 6px;
+            font-size: 0.85em;
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        }
+        footer {
+            padding: 40px 0 60px;
+            font-size: 0.88rem;
+            color: var(--text-dim);
+            border-top: 1px solid var(--border);
+        }
+        footer a { color: var(--text-muted); }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="badge">US Provisional Patent Pending</div>
-        <h1>Velocity</h1>
-        <p class="subtitle">Hardware-Isolated, Low-Latency Cryptographic Key Management Architecture for Confidential Computing & Institutional Custody.</p>
+<div class="wrap">
 
+    <header class="hero">
+        <div class="badge">US Provisional Patent Pending (USPTO)</div>
+        <div class="kicker">For banks, exchanges &amp; high-throughput signing infrastructure</div>
+        <h1>Hardware-Backed Key Security.<br><span class="accent">Zero Trust Custody.</span></h1>
+        <p class="subtitle">Signing keys that rotate themselves, in microseconds — validated on real AWS Nitro Enclave and real AWS CloudHSM hardware.</p>
+        <div class="byline">
+            Evgenii Kokhan · Founder, Velocity · Dubai, UAE ·
+            <a href="https://linkedin.com/in/evgenii-kokhan">LinkedIn</a>
+        </div>
+    </header>
+
+    <section>
+        <h2>A stolen key shouldn't stay a liability</h2>
+        <p class="lede">Signing keys inside a TEE/HSM setup rotate themselves automatically, in microseconds — so a leaked or stolen key is stale before it's worth using, without slowing down signing.</p>
         <div class="card">
-            <h3>The Technology</h3>
-            <p>Velocity solves the critical I/O processing latency and bus contention bottlenecks between CPU-enforced Trusted Execution Environments (TEEs like Intel SGX/TDX) and Hardware Security Modules (HSMs).</p>
-            <p>By leveraging an autonomous Key Derivation Function (KDF) ratcheting mechanism bound directly to TEE hardware integrity measurements, Velocity eliminates interactive network handshakes during session updates, achieving sub-millisecond execution times.</p>
+            <h3>The exposure window</h3>
+            <p>Today, a signing key lives until someone manually notices a breach and rotates it — hours, sometimes weeks. Every minute it stays valid, a stolen key is still a fully usable liability for an attacker.</p>
         </div>
-
         <div class="card">
-            <h3>Key Capabilities</h3>
-            <ul>
-                <li><strong>Microsecond Latency:</strong> Reduces session key rotation from a typical 10-50ms networked HSM round-trip to ~3µs — measured on real AWS Nitro Enclave hardware, not simulated.</li>
-                <li><strong>Hardware Integrity Bound:</strong> Keys are cryptographically tied to TEE hardware integrity measurements — validated on AWS Nitro Enclave (PCR0); architecturally compatible with Intel SGX (MRENCLAVE).</li>
-                <li><strong>Autonomous Ratcheting:</strong> Zero interactive handshakes during runtime execution.</li>
-            </ul>
+            <h3>Why rotating more often isn't done today</h3>
+            <p>Interactive HSM key rotation means a real network round trip — our own measured, best-case number (same-VPC, real AWS CloudHSM) is ~120ms, and that's the fast case. Too slow to do continuously on high-throughput signing infrastructure. Teams are forced to choose between frequent rotation and performance.</p>
         </div>
+        <div class="card">
+            <h3>Where this shows up</h3>
+            <p>Hot/warm wallet signing infrastructure, custody platforms, exchange withdrawal signing, payment/settlement message signing, crypto trading bots that sign every order (API keys or on-chain transactions), and any infrastructure — crypto or traditional finance — where a single compromised key can move real funds.</p>
+        </div>
+    </section>
 
-        <div class="footer">
-            &copy; 2026 Velocity Security. All rights reserved. <br>
-            Contact: <a href="mailto:crow004@protonmail.com">crow004@protonmail.com</a>
+    <section>
+        <h2>How it works</h2>
+        <p class="lede">Autonomous key ratcheting — the mechanism, in three steps.</p>
+        <div class="grid3">
+            <div class="step">
+                <div class="num">1</div>
+                <h3>Bootstrap</h3>
+                <p>TEE ↔ HSM run one ECDHE handshake and mutual attestation. Agree on K₀. One-time cost: ~0.3-0.5ms.</p>
+            </div>
+            <div class="step">
+                <div class="num">2</div>
+                <h3>Session-key ratchet</h3>
+                <p>Each side independently derives session key K<sub>n+1</sub> = HKDF-SHA256(K<sub>n</sub>, salt=hardware measurement, info=counter). No network call.</p>
+            </div>
+            <div class="step">
+                <div class="num">3</div>
+                <h3>Verify &amp; rotate</h3>
+                <p>Sliding-window replay protection + signed batch proofs make rollback attacks detectable. Measured: ~3µs/step.</p>
+            </div>
         </div>
-    </div>
+        <div class="card" style="margin-top: 16px;">
+            <h3>Analogy</h3>
+            <p>A self-reloading keycard, good for a set number of uses — the signer works at full speed without checking back with the vault each time. If tampered with, it instantly deactivates. Velocity does this for cryptographic signing keys.</p>
+        </div>
+        <div class="card">
+            <h3>What doesn't change</h3>
+            <p>We don't replace the HSM — it stays the root of trust, generating the master seed and never releasing it. We remove it from the hot path, not from the trust model. Patent-pending: the subject of the USPTO provisional filing (priority date 2026-07-13) is exactly this independent-derivation mechanism.</p>
+        </div>
+    </section>
+
+    <section>
+        <h2>Why it matters for you</h2>
+        <div class="card">
+            <h3>Exchanges, custodians &amp; payment processors</h3>
+            <p>Hot/warm wallet withdrawal signing, or payment and settlement message signing, is the highest-value attack surface you operate. Automatic, hardware-backed key rotation shrinks what any single compromised signing key is worth — without adding latency.</p>
+        </div>
+        <div class="card">
+            <h3>Signing infrastructure providers</h3>
+            <p>If you provide signing infrastructure for other companies' wallets or payment rails, key-rotation frequency is a direct sales argument to your own customers — and one you can currently only offer at a real performance cost.</p>
+        </div>
+        <div class="card">
+            <h3>Regulated / institutional custody</h3>
+            <p>Auditors and institutional clients increasingly ask about key-rotation policy, not just key-storage policy. Continuous, hardware-enforced rotation is a stronger answer than a manual quarterly rotation runbook.</p>
+        </div>
+        <div class="note">
+            <b>What we're not saying:</b> not a claim that key rotation alone stops every attack — it shrinks the value of one specific, common failure mode (a leaked or stolen signing key) without a performance cost. Not a replacement for your HSM or your existing key-custody policy. In scope: network/software key theft — the overwhelming majority of real incidents. Out of scope: an attacker who physically defeats a device's own tamper response and extracts key material directly — no HSM or TEE vendor claims protection against that, and neither do we.
+        </div>
+    </section>
+
+    <section>
+        <h2>Throughput at scale</h2>
+        <p class="lede">A real 1,000,000-transaction run on real AWS Nitro + real AWS CloudHSM — measured end to end.</p>
+        <div class="grid3">
+            <div class="stat">
+                <div class="label">Wall clock</div>
+                <div class="value">31 <small>sec</small></div>
+                <div class="caption">1,000,000 real transactions, start to finish, real AWS Nitro Enclave</div>
+            </div>
+            <div class="stat">
+                <div class="label">Windows authorized</div>
+                <div class="value">1000/1000 <small>100%</small></div>
+                <div class="caption">approved by a real, separate AWS CloudHSM cluster</div>
+            </div>
+            <div class="stat">
+                <div class="label">Key rotation</div>
+                <div class="value">3.12 <small>µs/step (mean)</small></div>
+                <div class="caption">1,000/1,000 unique rotating signing addresses — zero repeats</div>
+            </div>
+        </div>
+        <div class="note">
+            <b>vs. Visa/VisaNet's own published numbers:</b> real average 1,700-3,000 tx/sec, real peak 4,000-7,000 tx/sec, theoretical maximum &gt;65,000 tx/sec. This run's per-window throughput averaged 36,588 tx/sec (p10-p90: 20,523-48,609 tx/sec) — 5-12x Visa's real-world average and peak load. This is not a claim against their theoretical maximum.
+        </div>
+        <div class="note">
+            <b>What this run actually measured:</b> a real AWS Nitro Enclave (non-debug mode — genuine hardware attestation, not the placeholder value debug mode produces) consumed a real Kafka/Redpanda topic, and every one of the 1,000 authorization windows was independently re-verified and approved by a real, physically separate AWS CloudHSM cluster — not an in-process HSM stand-in, not a synthetic loop.
+        </div>
+        <div class="note">
+            <b>Also measured:</b> a separate run on a single developer laptop (no real HSM in the loop) previously reached 187,989 tx/sec steady-state — useful as evidence the pipeline itself is never the bottleneck, not a production or HSM-authorized claim.
+        </div>
+    </section>
+
+    <section>
+        <h2>Real hardware, not slideware</h2>
+        <p class="lede">Every number here was measured — none modeled or estimated.</p>
+        <div class="grid2">
+            <div class="stat">
+                <div class="label">Velocity ratchet step</div>
+                <div class="value">~3 <small>µs</small></div>
+                <div class="caption">real AWS Nitro Enclave, 200k-sample run</div>
+            </div>
+            <div class="stat">
+                <div class="label">HSM key generation</div>
+                <div class="value">~120 <small>ms</small></div>
+                <div class="caption">real AWS CloudHSM, measured — the operation Velocity's ratchet replaces</div>
+            </div>
+        </div>
+        <div class="card" style="margin-top:16px;">
+            <h3>Product stage: working implementation, not ideation</h3>
+            <p>A real, running Rust implementation — HSM-side code validated against both SoftHSM2 and a real, rented AWS CloudHSM cluster; TEE-side code validated end-to-end on a real AWS Nitro Enclave with real NSM hardware attestation (PCR0). Real on-chain settlement is proven too, submitted from outside the enclave since it has no network of its own — 17/17 real broadcasts succeeded.</p>
+        </div>
+        <div class="grid2">
+            <div class="card"><h3>IP</h3><p>USPTO provisional patent application filed, priority date 2026-07-13.</p></div>
+            <div class="card"><h3>DeFi &amp; EVM compatible</h3><p>Transaction signing uses secp256k1 + Keccak256 — the same primitives EVM chains use, so every signature is natively verifiable on-chain via Ethereum's own <code>ecrecover</code>, no custom verifier needed.</p></div>
+        </div>
+    </section>
+
+    <section>
+        <h2>Threshold-ECDSA — real and network-verified</h2>
+        <p class="lede">The signing backend is already pluggable behind one Rust trait. Cluster mode (single CloudHSM/SoftHSM2) is the production default today.</p>
+        <div class="card">
+            <h3>Real multi-party signing, no single key ever exists in one place</h3>
+            <p>Each party runs its own separate process, and a real 2-of-3 threshold-ECDSA ceremony has been run across three genuinely separate AWS machines, converging on one shared public key and one byte-identical signature.</p>
+        </div>
+        <div class="card">
+            <h3>Re-run across three continents to get a real number, not a guess</h3>
+            <p>Stockholm, Virginia, and Singapore — signing between the two farthest parties took 4-6 seconds real wall clock, still trivial against a once-per-window amortization argument.</p>
+        </div>
+        <div class="note">
+            <b>What's left is organizational, not technical:</b> today's demo still has one operator behind every party — genuine trust separation needs each party under a genuinely different controlling organization, which no infrastructure test alone can demonstrate. An independent-key multisig alternative mixing HSM, YubiKey and software keys per signer remains a second, separately buildable option for a client who prefers it.
+        </div>
+    </section>
+
+    <section>
+        <h2>How hard we tried to break this</h2>
+        <p class="lede">Every number below is a real test run against this exact codebase.</p>
+        <div class="grid3">
+            <div class="stat">
+                <div class="label">Tests passing</div>
+                <div class="value">98</div>
+                <div class="caption">kdf-core + tee-adapter + hsm-adapter — 100%</div>
+            </div>
+            <div class="stat">
+                <div class="label">Fuzz targets</div>
+                <div class="value">7</div>
+                <div class="caption">tens of millions of executions, zero crashes</div>
+            </div>
+            <div class="stat">
+                <div class="label">Mutants missed</div>
+                <div class="value">0</div>
+                <div class="caption">124 mutants tested across both crates' locally-testable code</div>
+            </div>
+        </div>
+        <div class="card" style="margin-top:16px;">
+            <h3>Unit &amp; integration tests, everywhere</h3>
+            <p>kdf-core: 69 tests. tee-adapter: 11 always-on + 4 real-AWS-S3 + 6 real-Nitro-hardware tests. hsm-adapter: 8 tests against both SoftHSM2 and a real, rented AWS CloudHSM cluster. 98 total, 100% passing, 97% line coverage on locally-testable code.</p>
+        </div>
+        <div class="card">
+            <h3>Fuzzed, not just tested</h3>
+            <p>7 libFuzzer targets across every security-critical boundary — replay protection, rollback detection, attestation verify, ECDHE bootstrap, authorization tokens, frame parsing. Found and fixed 2 real exploitable bugs this way: an integer-overflow DoS and an X25519 key-recovery vulnerability — before anyone else could find them.</p>
+        </div>
+        <div class="card">
+            <h3>Mutation testing</h3>
+            <p>cargo-mutants: 124 mutants tested across kdf-core and tee-adapter's locally-testable scope — 0 missed. Every gap it found got a real test, not a suppression.</p>
+        </div>
+    </section>
+
+    <section>
+        <h2>What we're offering</h2>
+        <p class="lede">Stated plainly, so there's no guessing.</p>
+        <div class="commercial">
+            <div class="pill">FREE FOR THE FIRST DESIGN PARTNER</div>
+            <h3>We're not selling a license. We're looking for one real deployment.</h3>
+            <p>Integration is free for the first real design partner — an existing regulated custodian, exchange, or high-throughput signing operation willing to run this in a real or near-real deployment. No license fee, no integration fee.</p>
+            <p>In exchange: the right to reference the deployment as a real, in-production case study (scoped to whatever disclosure level you're comfortable with), and a revenue-share negotiated after a successful go-live — not before, and not assumed in advance.</p>
+            <p>If your team manages real signing infrastructure and key-rotation latency or exposure-window risk is something you've actually run into, that's the conversation worth having — not a sales pitch.</p>
+        </div>
+    </section>
+
+    <section>
+        <h2>Let's talk</h2>
+        <div class="grid2">
+            <div class="card">
+                <h3>Code &amp; benchmarks</h3>
+                <p>Private GitHub repo — full Rust source, benchmark reports, and the attestation artifact. Access granted under NDA on request.</p>
+            </div>
+            <div class="card">
+                <h3>Next step</h3>
+                <p>A short technical scoping call — what your current key-rotation setup costs you today, and whether this is a fit.</p>
+            </div>
+        </div>
+        <div class="cta-row">
+            <a class="btn btn-primary" href="mailto:crow004@protonmail.com">Email crow004@protonmail.com</a>
+            <a class="btn btn-secondary" href="https://linkedin.com/in/evgenii-kokhan">Connect on LinkedIn</a>
+        </div>
+    </section>
+
+    <footer>
+        &copy; 2026 Velocity Security. All rights reserved.<br>
+        Contact: <a href="mailto:crow004@protonmail.com">crow004@protonmail.com</a> · <a href="https://linkedin.com/in/evgenii-kokhan">LinkedIn</a>
+    </footer>
+
+</div>
 </body>
 </html>
