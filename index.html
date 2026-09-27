@@ -343,6 +343,19 @@
     </section>
 
     <section>
+        <h2>Not locked to one cloud vendor's enclave</h2>
+        <p class="lede">The identical tee-service image also runs, unmodified, on a second real TEE technology.</p>
+        <div class="card">
+            <h3>Verified on real Intel TDX hardware, not just booted</h3>
+            <p>Beyond AWS Nitro Enclaves, the same Docker image runs inside a real Intel TDX confidential VM (Phala Cloud). A real TDX attestation quote was fetched from live hardware and independently verified against Intel's own certificate chain — not the platform's own say-so.</p>
+        </div>
+        <div class="note">
+            <b>Stated plainly:</b> we also tested whether this platform detects a stealth enclave restart the way AWS Nitro's <code>module_id</code> does. It partially does — it reliably tells two different deployments apart, but a plain restart of the same deployment isn't yet distinguishable that way. We'd rather state that boundary exactly than round it up.
+        </div>
+        <p style="margin-top:16px;"><a class="btn btn-secondary" href="dashboard.html">See the live verification dashboard →</a></p>
+    </section>
+
+    <section>
         <h2>How hard we tried to break this</h2>
         <p class="lede">Every number below is a real test run against this exact codebase.</p>
         <div class="grid3">

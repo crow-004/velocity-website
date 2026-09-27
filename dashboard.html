@@ -1,0 +1,770 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Velocity Enclave Status</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --bg: #F2F5F4;
+    --surface: #FFFFFF;
+    --surface-2: #E9EFED;
+    --text: #10181A;
+    --text-muted: #56645F;
+    --border: #DCE3E1;
+    --accent: #0D8A76;
+    --accent-bg: #E3F4EF;
+    --ok: #1E9E6B;
+    --ok-bg: #E3F6EC;
+    --warn: #B4700A;
+    --warn-bg: #FBEAD1;
+    --crit: #C13B31;
+    --crit-bg: #FCE4E1;
+    --shadow: 0 1px 2px rgba(16, 24, 26, 0.06), 0 8px 24px -12px rgba(16, 24, 26, 0.12);
+    --font-display: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono: 'IBM Plex Mono', 'SF Mono', ui-monospace, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0A1211;
+      --surface: #101B19;
+      --surface-2: #16221F;
+      --text: #E6F1EE;
+      --text-muted: #8FA6A0;
+      --border: #223330;
+      --accent: #35D6B4;
+      --accent-bg: #123027;
+      --ok: #3ECB8E;
+      --ok-bg: #0F2A20;
+      --warn: #E7A93B;
+      --warn-bg: #2E220C;
+      --crit: #F0685C;
+      --crit-bg: #331714;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px -12px rgba(0, 0, 0, 0.5);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0A1211;
+    --surface: #101B19;
+    --surface-2: #16221F;
+    --text: #E6F1EE;
+    --text-muted: #8FA6A0;
+    --border: #223330;
+    --accent: #35D6B4;
+    --accent-bg: #123027;
+    --ok: #3ECB8E;
+    --ok-bg: #0F2A20;
+    --warn: #E7A93B;
+    --warn-bg: #2E220C;
+    --crit: #F0685C;
+    --crit-bg: #331714;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px -12px rgba(0, 0, 0, 0.5);
+  }
+
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-display);
+  }
+  body {
+    padding: 32px 24px 64px;
+    display: flex;
+    justify-content: center;
+  }
+  .page {
+    width: 100%;
+    max-width: 920px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  /* ---- header ---- */
+  .header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .titleblock h1 {
+    font-size: 21px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin: 0 0 4px;
+    text-wrap: balance;
+  }
+  .titleblock .subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+  }
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 14px;
+    border-radius: 999px;
+    font-size: 12.5px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .pill .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .pill.ok { background: var(--ok-bg); color: var(--ok); }
+  .pill.ok .dot { background: var(--ok); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ok) 20%, transparent); }
+  .pill.warn { background: var(--warn-bg); color: var(--warn); }
+  .pill.warn .dot { background: var(--warn); box-shadow: 0 0 0 3px color-mix(in srgb, var(--warn) 20%, transparent); }
+  .pill.crit { background: var(--crit-bg); color: var(--crit); }
+  .pill.crit .dot { background: var(--crit); box-shadow: 0 0 0 3px color-mix(in srgb, var(--crit) 20%, transparent); }
+  @media (prefers-reduced-motion: no-preference) {
+    .pill.ok .dot { animation: pulse 2.2s ease-in-out infinite; }
+  }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 3px color-mix(in srgb, var(--ok) 20%, transparent); }
+    50% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--ok) 8%, transparent); }
+  }
+
+  .source-badge {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: var(--text-muted);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 5px 9px;
+  }
+
+  /* ---- stat grid ---- */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 12px;
+  }
+  .stat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 18px;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+  }
+  .stat .label {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .stat .value {
+    font-family: var(--font-mono);
+    font-size: 24px;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+    line-height: 1.15;
+    overflow-wrap: anywhere;
+  }
+  .stat .value.small {
+    font-size: 15px;
+    overflow-wrap: anywhere;
+  }
+  .stat .caption {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .hw-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+  }
+  .hw-dot.real { background: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent); }
+  .hw-dot.placeholder { background: var(--text-muted); opacity: 0.5; }
+
+  /* ---- alerts ---- */
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+  }
+  .panel-head h2 {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .count-chip {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    background: var(--surface-2);
+    color: var(--text-muted);
+    border-radius: 999px;
+    padding: 2px 9px;
+  }
+  .alert-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .alert-row {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 13px 18px;
+    border-bottom: 1px solid var(--border);
+  }
+  .alert-row:last-child { border-bottom: none; }
+  .alert-row .sev {
+    flex-shrink: 0;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 3px 8px;
+    border-radius: 5px;
+    margin-top: 1px;
+  }
+  .alert-row .sev.warning { background: var(--warn-bg); color: var(--warn); }
+  .alert-row .sev.critical { background: var(--crit-bg); color: var(--crit); }
+  .alert-row .body { min-width: 0; flex: 1; }
+  .alert-row .msg { font-size: 13.5px; line-height: 1.5; word-break: break-word; }
+  .alert-row .when { font-family: var(--font-mono); font-size: 11.5px; color: var(--text-muted); margin-top: 3px; }
+  .empty-alerts {
+    padding: 28px 18px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 13.5px;
+  }
+
+  /* ---- footer controls ---- */
+  .controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    font-size: 12.5px;
+    color: var(--text-muted);
+  }
+  .controls .note code {
+    font-family: var(--font-mono);
+    background: var(--surface-2);
+    border-radius: 4px;
+    padding: 1px 5px;
+    font-size: 11.5px;
+  }
+  button.filebtn {
+    font-family: var(--font-display);
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--accent);
+    background: var(--accent-bg);
+    border: 1px solid transparent;
+    border-radius: 8px;
+    padding: 8px 14px;
+    cursor: pointer;
+  }
+  button.filebtn:hover { filter: brightness(0.97); }
+  button.filebtn:focus-visible, .file-input-native:focus-visible + label {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  /* ---- print / save-as-PDF: one panel per page ---- */
+  @media print {
+    .panel {
+      break-inside: avoid;
+      page-break-inside: avoid;
+      break-after: page;
+      page-break-after: always;
+    }
+    .panel:last-of-type {
+      break-after: auto;
+      page-break-after: auto;
+    }
+    .controls { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="header">
+    <div class="titleblock">
+      <h1>Velocity Enclave Status</h1>
+      <div class="subtitle" id="subtitle">crates/tee-service · velocity-tee-status.json</div>
+    </div>
+    <div class="header-right">
+      <span class="source-badge" id="source-badge">loading…</span>
+      <span class="pill" id="status-pill"><span class="dot"></span><span>—</span></span>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="label">Counter</div>
+      <div class="value" id="stat-counter">—</div>
+      <div class="caption">transactions ratcheted this session</div>
+    </div>
+    <div class="stat">
+      <div class="label">Batches completed</div>
+      <div class="value" id="stat-batches">—</div>
+      <div class="caption" id="stat-batches-caption">1000 tx / batch</div>
+    </div>
+    <div class="stat">
+      <div class="label">Throughput</div>
+      <div class="value" id="stat-throughput">—</div>
+      <div class="caption">tx/sec, last window (real, this run)</div>
+    </div>
+    <div class="stat">
+      <div class="label">Key rotation speed</div>
+      <div class="value" id="stat-ratchet-speed">—</div>
+      <div class="caption">avg µs / ratchet_step, last window</div>
+    </div>
+    <div class="stat">
+      <div class="label">Enclave started</div>
+      <div class="value small" id="stat-started">—</div>
+      <div class="caption" id="stat-uptime">—</div>
+    </div>
+    <div class="stat">
+      <div class="label"><span class="hw-dot" id="hw-dot"></span>Module ID</div>
+      <div class="value small" id="stat-module-id">—</div>
+      <div class="caption" id="stat-module-caption">—</div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Alerts</h2>
+      <span class="count-chip" id="alert-count">0</span>
+    </div>
+    <ul class="alert-list" id="alert-list"></ul>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Real Nitro + Real CloudHSM — Authorized Run</h2>
+      <span class="count-chip">2026-09-17, real hardware</span>
+    </div>
+    <div style="padding: 16px 18px; display: flex; flex-direction: column; gap: 16px;">
+      <div class="stats">
+        <div class="stat">
+          <div class="label">Wall clock</div>
+          <div class="value">31 <span style="font-size: 14px; font-weight: 400;">sec</span></div>
+          <div class="caption">1,000,000 real tx, start to finish, real AWS Nitro Enclave</div>
+        </div>
+        <div class="stat">
+          <div class="label">Windows authorized</div>
+          <div class="value">1000 / 1000 <span style="font-size: 14px; font-weight: 400;">100%</span></div>
+          <div class="caption">by a real, separate hsm-service process on a real AWS CloudHSM cluster</div>
+        </div>
+        <div class="stat">
+          <div class="label">Key rotation</div>
+          <div class="value">3.12 <span style="font-size: 14px; font-weight: 400;">µs/step (mean)</span></div>
+          <div class="caption">1000/1000 unique session-signing addresses -- zero repeats</div>
+        </div>
+        <div class="stat">
+          <div class="label">On-chain relay</div>
+          <div class="value">17 / 17 <span style="font-size: 14px; font-weight: 400;">succeeded</span></div>
+          <div class="caption">real release() broadcasts, sent from OUTSIDE the enclave (no shell/network inside a real Nitro Enclave) -- 0 failed</div>
+        </div>
+      </div>
+      <div style="font-size: 12.5px; color: var(--text-muted); line-height: 1.6;">
+        <b style="color: var(--text);">Everything real at once, for the first time:</b> real Nitro
+        Enclave (non-debug mode, so PCR0 is the genuine build-time measurement, not the zeroed
+        value --debug-mode produces), real Kafka/Redpanda intake, real re-attestation checked by a
+        real, network-separated HSM authority backed by real AWS CloudHSM -- not the in-process
+        HsmAuthority stand-in. Per-window throughput averaged 36,588 tx/sec (p10-p90:
+        20,523-48,609 tx/sec), well above Visa/VisaNet's own published real average (1,700-3,000
+        tx/sec) and real peak (4,000-7,000 tx/sec) load, though below their published theoretical
+        maximum (&gt;65,000 tx/sec) -- see the record below for that comparison.
+        <br><br>
+        <b style="color: var(--text);">On-chain relay from outside the enclave, verified 2026-09-17:</b>
+        a real Nitro Enclave can't shell out or reach the network itself (<code>FROM scratch</code>,
+        vsock only), so the same real signature + real HSM-issued token is sent over vsock to a
+        dedicated host-side process, which broadcasts it -- opt-in, host-side policy
+        (<code>VELOCITY_RELAY_ONCHAIN=1</code>), not baked into the enclave build. A separate run
+        against a fresh VelocityArbiter deployment (real CloudHSM cluster's own key, see
+        <code>docs/velocity-key-architecture.svg</code>): 1,034,000 real transactions, 100% HSM
+        authorized, first confirmed release() tx
+        <code>0x031528903eceb64ccbabfc39fd57d320edea703700703cfd2bf935686cf70a64</code>.
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Best Recorded Run — Dev-Laptop Throughput Ceiling</h2>
+      <span class="count-chip">2026-09-16, fixed record</span>
+    </div>
+    <div style="padding: 16px 18px; display: flex; flex-direction: column; gap: 16px;">
+      <div class="stats">
+        <div class="stat">
+          <div class="label">Steady-state</div>
+          <div class="value">187,989 <span style="font-size: 14px; font-weight: 400;">tx/sec</span></div>
+          <div class="caption">real Kafka intake → ratchet → Merkle → HSM auth</div>
+        </div>
+        <div class="stat">
+          <div class="label">Averaged</div>
+          <div class="value">126,296 <span style="font-size: 14px; font-weight: 400;">tx/sec</span></div>
+          <div class="caption">1,000,000 real tx in 7.92s wall clock, cold start included</div>
+        </div>
+        <div class="stat">
+          <div class="label">Key rotation</div>
+          <div class="value">0.4 <span style="font-size: 14px; font-weight: 400;">µs/step</span></div>
+          <div class="caption">the ratchet step alone, isolated from network/queue time</div>
+        </div>
+      </div>
+      <div style="font-size: 12.5px; color: var(--text-muted); line-height: 1.6;">
+        <b style="color: var(--text);">Not a production or HSM-authorized number:</b> measured on
+        one developer laptop (WSL2) with the in-process HsmAuthority stand-in, not a real,
+        separate HSM. This is the pipeline's own ceiling with everything off the hot path removed
+        -- it's what tells you the crypto and Kafka intake are never the bottleneck, not a
+        deployment-shaped claim. For that, see the real Nitro + real CloudHSM run above.
+        <br /><br />
+        vs. Visa/VisaNet's own published figures: real average 1,700-3,000 tx/sec, real peak
+        4,000-7,000 tx/sec, theoretical maximum &gt;65,000 tx/sec -- this dev-laptop ceiling
+        exceeds even that theoretical maximum. Reproduce it yourself:
+        <code>scripts/wsl-benchmark-kafka-intake-throughput.sh</code>.
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Real Threshold-ECDSA — Cross-Continent Signing</h2>
+      <span class="count-chip">2026-09-26, real hardware, 3 AWS regions</span>
+    </div>
+    <div style="padding: 16px 18px; display: flex; flex-direction: column; gap: 16px;">
+      <div class="stats">
+        <div class="stat">
+          <div class="label">Keygen (2-of-3 DKG)</div>
+          <div class="value">93-105 <span style="font-size: 14px; font-weight: 400;">sec/party</span></div>
+          <div class="caption">indistinguishable from same-region/in-process -- CPU-bound safe-prime search dominates, not network RTT</div>
+        </div>
+        <div class="stat">
+          <div class="label">Signing, cross-continent</div>
+          <div class="value">3.99-5.85 <span style="font-size: 14px; font-weight: 400;">sec</span></div>
+          <div class="caption">Virginia &lt;-&gt; Singapore, relayed through Stockholm -- byte-identical signature both sides</div>
+        </div>
+        <div class="stat">
+          <div class="label">Signing, in-process baseline</div>
+          <div class="value">~1.2-1.3 <span style="font-size: 14px; font-weight: 400;">sec</span></div>
+          <div class="caption">same protocol, one process, for comparison -- real WAN adds roughly 3-4.5x, still single-digit seconds</div>
+        </div>
+        <div class="stat">
+          <div class="label">Public key agreement</div>
+          <div class="value">3 / 3 <span style="font-size: 14px; font-weight: 400;">matched</span></div>
+          <div class="caption">every party independently converged on the same shared public key</div>
+        </div>
+      </div>
+      <div style="font-size: 12.5px; color: var(--text-muted); line-height: 1.6;">
+        <b style="color: var(--text);">What this proves:</b> a real 2-of-3 threshold-ECDSA (cggmp21)
+        DKG + signing ceremony run across three genuinely separate AWS EC2 instances in three
+        different regions on three different continents (eu-north-1/Stockholm hosting the relays,
+        us-east-1/Virginia and ap-southeast-1/Singapore as the two signing parties for this run) --
+        not simulated, not same-machine. Both signing parties independently arrived at the
+        byte-identical signature and independently verified it before reporting it.
+        <br /><br />
+        <b style="color: var(--text);">What this does NOT prove, stated plainly:</b> one operator
+        (one AWS account, one SSH key) controlled every party's process in this run. The protocol
+        itself never assembles the complete private key at any point -- each party only ever
+        computes its own contribution -- but an operator who can read every party's own key-share
+        file could, outside the protocol, combine any t of them via Lagrange interpolation and
+        reconstruct it. Genuine trust separation needs each party under a genuinely different
+        controlling organization, which this run does not demonstrate and no infrastructure test
+        can -- see TODO.md item #11.
+        <br /><br />
+        Reproduce it yourself: <code>scripts/wsl-deploy-and-build-party.sh</code>,
+        <code>scripts/wsl-run-keygen-on-party.sh</code>, <code>scripts/wsl-run-sign-on-party.sh</code>.
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Real TDX Attestation — Second TEE Backend (Phala Cloud / dstack)</h2>
+      <span class="count-chip">2026-09-27, real hardware, Intel TDX</span>
+    </div>
+    <div style="padding: 16px 18px; display: flex; flex-direction: column; gap: 16px;">
+      <div class="stats">
+        <div class="stat">
+          <div class="label">Real DCAP quote</div>
+          <div class="value">5010 <span style="font-size: 14px; font-weight: 400;">bytes</span></div>
+          <div class="caption">header 04 00 02 00 81 00 00 00 -- version 4, ECDSA-P256, tee_type=TDX, matching Intel's real layout</div>
+        </div>
+        <div class="stat">
+          <div class="label">Cert-chain verification</div>
+          <div class="value">VERIFIED <span style="font-size: 14px; font-weight: 400;">tcb_status: UpToDate</span></div>
+          <div class="caption">dcap-qvl against real Intel PCCS collateral, not a stubbed check</div>
+        </div>
+        <div class="stat">
+          <div class="label">mr_config_id across Restart/Stop-Start</div>
+          <div class="value">unchanged <span style="font-size: 14px; font-weight: 400;">same deployment</span></div>
+          <div class="caption">byte-identical across a real Stop-&gt;Start and a real plain Restart of the same CVM</div>
+        </div>
+        <div class="stat">
+          <div class="label">mr_config_id after delete + redeploy</div>
+          <div class="value">changed <span style="font-size: 14px; font-weight: 400;">new deployment</span></div>
+          <div class="caption">real, deployment-scoped identifier -- not always-zero, not one fixed value regardless of deployment</div>
+        </div>
+      </div>
+      <div style="font-size: 12.5px; color: var(--text-muted); line-height: 1.6;">
+        <b style="color: var(--text);">What this proves:</b> a second, genuinely different TEE
+        backend works end-to-end, not just boots -- a real TDX DCAP quote fetched from a real
+        Phala Cloud confidential VM over its guest socket, independently verified against Intel's
+        real certificate chain (not the platform's own say-so). The restart-uniqueness test
+        settles a question raised by TDX's attestation shape: <code>mr_config_id</code>/
+        <code>mr_owner</code>/<code>mr_owner_config</code> are real, per-deployment identifiers set
+        at CVM/App creation time -- confirmed by comparing three real events (Stop-&gt;Start, plain
+        Restart, full delete-and-redeploy-from-scratch as a brand-new App/CVM). The verification
+        CVM itself was torn down once this test completed (the delete-and-redeploy step, above,
+        required that anyway) and is not kept running continuously -- redeployed on request for a
+        live demonstration.
+        <br /><br />
+        <b style="color: var(--text);">What this does NOT prove, stated plainly:</b> these fields
+        are not a per-boot-random, Nitro-<code>module_id</code>-equivalent restart-detection
+        signal -- they cannot catch a stealthy relaunch of the *same* deployment, only distinguish
+        one deployment from another. The genuine per-launch-unique field TDX's own module spec
+        defines (<code>TDID256</code>) is not reachable today: an Intel engineer confirmed on a
+        public forum that it "has not been upstreamed" through QEMU, and independently, the
+        real DCAP report structs this project parses (<code>TDReport10</code>/<code>TDReport15</code>
+        via <code>dcap-qvl</code>) have no such field at all. See TODO.md item #11 for the full
+        account, including the real <code>ca-certificates</code> bug found and fixed along the way.
+      </div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <span class="note">Opened directly as a file, or via a local server next to <code>velocity-tee-status.json</code> — when reachable, the page polls it every 5s.</span>
+    <span>
+      <input type="file" id="file-input" accept="application/json" class="file-input-native" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);">
+      <button class="filebtn" id="load-btn" type="button">Load status.json…</button>
+    </span>
+  </div>
+
+</div>
+
+<script>
+  // Example data -- the final snapshot of a single real, complete run
+  // captured 2026-09-17: real AWS Nitro Enclave (non-debug mode, so PCR0 is
+  // the genuine build-time measurement, not the zeroed value --debug-mode
+  // produces), consuming a real Kafka/Redpanda topic, authorized every
+  // single window by a real, separate hsm-service process backed by a real
+  // AWS CloudHSM cluster (not the in-process HsmAuthority stand-in) -- the
+  // HSM never saw a debug-mode quote, since none of that is possible with a
+  // console attached (see docs/benchmark-report-real-nitro-cloudhsm.md for
+  // why: console I/O measurably distorted timing, and --debug-mode zeros
+  // every PCR, which breaks real HSM authorization outright). Every field
+  // here, including window_tx_per_sec/avg_ratchet_step_micros, comes from
+  // that run's actual last window (1000/1000 windows authorized, 1,000,000
+  // real transactions, 31s wall clock total) -- no re-measurement, no
+  // illustrative placeholder.
+  const DEMO_DATA = {
+    generated_at: 1789650127,
+    counter: 1000000,
+    batches_completed: 1000,
+    last_batch_at: 1789650127,
+    attestation_source: "real Nitro Enclave (NSM PCR0)",
+    module_id: "i-0ab970d507cdcce68-enc01a0af754cc12ec1",
+    session_started_at: 1789650096,
+    last_window_index: 1000,
+    last_window_authorized: true,
+    last_window_reason: null,
+    window_tx_per_sec: 45423.26,
+    avg_ratchet_step_micros: 3.111,
+    alerts: []
+  };
+
+  const STATUS_FILE = "./velocity-tee-status.json";
+  let pollTimer = null;
+  let usingLiveData = false;
+
+  function fmtTime(unixSecs) {
+    if (unixSecs === null || unixSecs === undefined) return "—";
+    const d = new Date(unixSecs * 1000);
+    return d.toLocaleString('en-US', { hour12: false });
+  }
+
+  function fmtRelative(unixSecs, nowSecs) {
+    const diff = Math.max(0, nowSecs - unixSecs);
+    if (diff < 60) return `${diff}s ago`;
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h ${Math.floor((diff % 3600) / 60)}m ago`;
+    return `${Math.floor(diff / 86400)}d ago`;
+  }
+
+  function render(data, sourceLabel) {
+    const nowSecs = Math.floor(Date.now() / 1000);
+
+    document.getElementById('source-badge').textContent = sourceLabel;
+
+    // --- overall status pill ---
+    const pill = document.getElementById('status-pill');
+    pill.classList.remove('ok', 'warn', 'crit');
+    const dotSpan = pill.querySelector('.dot');
+    const labelSpan = pill.querySelector('span:last-child');
+    if (data.last_window_authorized) {
+      pill.classList.add('ok');
+      labelSpan.textContent = 'AUTHORIZED';
+    } else if ((data.last_window_reason || '').includes('revoked')) {
+      pill.classList.add('crit');
+      labelSpan.textContent = 'REVOKED';
+    } else if (data.last_window_reason) {
+      pill.classList.add('warn');
+      labelSpan.textContent = 'DENIED';
+    } else {
+      pill.classList.add('ok');
+      labelSpan.textContent = 'IDLE';
+    }
+
+    // --- stat tiles ---
+    document.getElementById('stat-counter').textContent = data.counter.toLocaleString('en-US');
+    document.getElementById('stat-batches').textContent = data.batches_completed.toLocaleString('en-US');
+    document.getElementById('stat-batches-caption').textContent =
+      `last batch: ${fmtRelative(data.last_batch_at, nowSecs)}`;
+
+    const txPerSec = data.window_tx_per_sec;
+    document.getElementById('stat-throughput').textContent =
+      (txPerSec === undefined || txPerSec === null) ? '—' : txPerSec.toLocaleString('en-US', { maximumFractionDigits: 1 }) + ' tx/s';
+
+    const ratchetMicros = data.avg_ratchet_step_micros;
+    document.getElementById('stat-ratchet-speed').textContent =
+      (ratchetMicros === undefined || ratchetMicros === null) ? '—' : ratchetMicros.toLocaleString('en-US', { maximumFractionDigits: 2 }) + ' µs';
+
+    document.getElementById('stat-started').textContent = fmtTime(data.session_started_at);
+    document.getElementById('stat-uptime').textContent =
+      `uptime: ${fmtRelative(data.session_started_at, nowSecs).replace(' ago', '')}`;
+
+    const hwDot = document.getElementById('hw-dot');
+    const moduleIdEl = document.getElementById('stat-module-id');
+    const moduleCaption = document.getElementById('stat-module-caption');
+    if (data.module_id) {
+      hwDot.className = 'hw-dot real';
+      moduleIdEl.textContent = data.module_id;
+      moduleCaption.textContent = 'real Nitro, NSM-signed';
+    } else {
+      hwDot.className = 'hw-dot placeholder';
+      moduleIdEl.textContent = '— (placeholder)';
+      moduleCaption.textContent = 'no real hardware in this run';
+    }
+
+    // --- alerts ---
+    const list = document.getElementById('alert-list');
+    const countChip = document.getElementById('alert-count');
+    const alerts = (data.alerts || []).slice().sort((a, b) => b.at - a.at);
+    countChip.textContent = alerts.length;
+    list.innerHTML = '';
+    if (alerts.length === 0) {
+      const li = document.createElement('li');
+      li.className = 'empty-alerts';
+      li.textContent = 'No alerts — the HSM has authorized every window with no denials.';
+      list.appendChild(li);
+    } else {
+      for (const a of alerts) {
+        const li = document.createElement('li');
+        li.className = 'alert-row';
+        const sevClass = a.level === 'critical' ? 'critical' : 'warning';
+        li.innerHTML = `
+          <span class="sev ${sevClass}">${a.level === 'critical' ? 'critical' : 'warning'}</span>
+          <div class="body">
+            <div class="msg"></div>
+            <div class="when"></div>
+          </div>`;
+        li.querySelector('.msg').textContent = a.message;
+        li.querySelector('.when').textContent = `${fmtTime(a.at)} · ${fmtRelative(a.at, nowSecs)}`;
+        list.appendChild(li);
+      }
+    }
+  }
+
+  async function tryFetchLive() {
+    try {
+      const res = await fetch(STATUS_FILE, { cache: 'no-store' });
+      if (!res.ok) return false;
+      const data = await res.json();
+      render(data, 'live · ' + STATUS_FILE.replace('./', ''));
+      usingLiveData = true;
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function startPolling() {
+    if (pollTimer) clearInterval(pollTimer);
+    pollTimer = setInterval(async () => {
+      const ok = await tryFetchLive();
+      if (!ok && usingLiveData) {
+        document.getElementById('source-badge').textContent = 'connection lost — showing last known data';
+      }
+    }, 5000);
+  }
+
+  document.getElementById('load-btn').addEventListener('click', () => {
+    document.getElementById('file-input').click();
+  });
+  document.getElementById('file-input').addEventListener('change', (ev) => {
+    const file = ev.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const data = JSON.parse(reader.result);
+        if (pollTimer) clearInterval(pollTimer);
+        usingLiveData = false;
+        render(data, 'file · ' + file.name);
+      } catch (e) {
+        alert('Could not parse JSON: ' + e.message);
+      }
+    };
+    reader.readAsText(file);
+  });
+
+  (async () => {
+    const ok = await tryFetchLive();
+    if (ok) {
+      startPolling();
+    } else {
+      render(DEMO_DATA, 'example · real Nitro+CloudHSM, captured 2026-09-17');
+    }
+  })();
+</script>
+</body>
+</html>
