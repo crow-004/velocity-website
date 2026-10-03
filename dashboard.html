@@ -392,7 +392,7 @@
         <div class="stat">
           <div class="label">Windows authorized</div>
           <div class="value">1000 / 1000 <span style="font-size: 14px; font-weight: 400;">100%</span></div>
-          <div class="caption">by a real, separate hsm-service process on a real AWS CloudHSM cluster</div>
+          <div class="caption">by a real, separate authority-service process on a real AWS CloudHSM cluster</div>
         </div>
         <div class="stat">
           <div class="label">Key rotation</div>
@@ -586,7 +586,7 @@
   // captured 2026-09-17: real AWS Nitro Enclave (non-debug mode, so PCR0 is
   // the genuine build-time measurement, not the zeroed value --debug-mode
   // produces), consuming a real Kafka/Redpanda topic, authorized every
-  // single window by a real, separate hsm-service process backed by a real
+  // single window by a real, separate authority-service process backed by a real
   // AWS CloudHSM cluster (not the in-process HsmAuthority stand-in) -- the
   // HSM never saw a debug-mode quote, since none of that is possible with a
   // console attached (see docs/benchmark-report-real-nitro-cloudhsm.md for
