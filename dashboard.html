@@ -328,7 +328,7 @@
   <div class="header">
     <div class="titleblock">
       <h1>Tachpawl Enclave Status</h1>
-      <div class="subtitle" id="subtitle">crates/tee-service · velocity-tee-status.json</div>
+      <div class="subtitle" id="subtitle">crates/tee-service · tachpawl-tee-status.json</div>
     </div>
     <div class="header-right">
       <span class="source-badge" id="source-badge">loading…</span>
@@ -419,7 +419,7 @@
         a real Nitro Enclave can't shell out or reach the network itself (<code>FROM scratch</code>,
         vsock only), so the same real signature + real HSM-issued token is sent over vsock to a
         dedicated host-side process, which broadcasts it -- opt-in, host-side policy
-        (<code>VELOCITY_RELAY_ONCHAIN=1</code>), not baked into the enclave build. A separate run
+        (<code>TACHPAWL_RELAY_ONCHAIN=1</code>), not baked into the enclave build. A separate run
         against a fresh VelocityArbiter deployment (real CloudHSM cluster's own key, see
         <code>docs/tachpawl-key-architecture.svg</code>): 1,034,000 real transactions, 100% HSM
         authorized, first confirmed release() tx
@@ -572,7 +572,7 @@
   </div>
 
   <div class="controls">
-    <span class="note">Opened directly as a file, or via a local server next to <code>velocity-tee-status.json</code> — when reachable, the page polls it every 5s.</span>
+    <span class="note">Opened directly as a file, or via a local server next to <code>tachpawl-tee-status.json</code> — when reachable, the page polls it every 5s.</span>
     <span>
       <input type="file" id="file-input" accept="application/json" class="file-input-native" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);">
       <button class="filebtn" id="load-btn" type="button">Load status.json…</button>
@@ -612,7 +612,7 @@
     alerts: []
   };
 
-  const STATUS_FILE = "./velocity-tee-status.json";
+  const STATUS_FILE = "./tachpawl-tee-status.json";
   let pollTimer = null;
   let usingLiveData = false;
 
